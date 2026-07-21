@@ -1,0 +1,15 @@
+# Relative to repo root
+output_dir = "nix/generated"
+
+# Name of repo folder
+[ndt-omp-ros2]
+
+# Repo URL (to clone)
+url = "https://github.com/rsasaki0109/ndt_omp_ros2"
+
+# Filepaths for each package.xml in the repo
+paths = ["package.xml"]
+
+[lidarslam]
+url = "https://github.com/rsasaki0109/lidarslam_ros2"
+# No 'paths' = search for package.xml files automatically
