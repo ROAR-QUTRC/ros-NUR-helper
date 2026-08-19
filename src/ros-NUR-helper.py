@@ -67,7 +67,9 @@ if __name__ == "__main__":
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 print(f"Cloning repo {details["url"]}")
-                git.Repo.clone_from(details["url"], temp_dir)
+                repo = git.Repo.clone_from(details["url"], temp_dir)
+                if "branch" in details:
+                    repo.git.checkout(details["branch"])
                 print("Cloned")
 
                 if "paths" not in details:

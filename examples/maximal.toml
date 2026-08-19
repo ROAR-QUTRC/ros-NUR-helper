@@ -14,3 +14,7 @@ paths = ["package.xml"]
 [lidarslam]
 url = "https://github.com/rsasaki0109/lidarslam_ros2"
 # No 'paths' = search for package.xml files automatically
+
+[fast-lio]
+url = "https://github.com/hku_mars/FAST_LIO"
+branch = "ROS2"
