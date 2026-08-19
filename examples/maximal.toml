@@ -6,15 +6,15 @@ overlay_prefix = "arg1: "
 [ndt-omp-ros2]
 
 # Repo URL (to clone)
-url = "https://github.com/rsasaki0109/ndt_omp_ros2"
+url = "https://github.com/rsasaki0109/ndt_omp_ros2.git"
 
 # Filepaths for each package.xml in the repo
 paths = ["package.xml"]
 
 [lidarslam]
-url = "https://github.com/rsasaki0109/lidarslam_ros2"
+url = "https://github.com/rsasaki0109/lidarslam_ros2.git"
 # No 'paths' = search for package.xml files automatically
 
 [fast-lio]
-url = "https://github.com/hku_mars/FAST_LIO"
+url = "https://github.com/hku-mars/FAST_LIO.git"
 branch = "ROS2"

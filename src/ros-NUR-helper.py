@@ -70,6 +70,14 @@ if __name__ == "__main__":
                 repo = git.Repo.clone_from(details["url"], temp_dir)
                 if "branch" in details:
                     repo.git.checkout(details["branch"])
+                else:
+                    tag_latest = (
+                        repo.git.ls_remote("--tags", sort="v:refname")
+                        .split("\n")[0]
+                        .split("\t")[-1]
+                        .split("/")[-1]
+                    )
+                    repo.git.checkout(tag_latest)
                 print("Cloned")
 
                 if "paths" not in details:
