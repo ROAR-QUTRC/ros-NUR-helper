@@ -10,9 +10,9 @@ from getopt import getopt
 from time import sleep
 from glob import glob
 
-rosargs = "--output-as-nix-pkg-name --fetch --no-cache --package-only"
+rosargs = "--output-as-nix-pkg-name --fetch --no-cache --package-only --overlay"
 
-overlay_template = ["final: prev: {\n", "}\n"]
+overlay_template = ["final: prev: prev.lib.composeManyExtensions [\n", "] final prev\n"]
 
 
 def parse_toml(filepath: str):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             output_dir = os.path.join(output_dir_for_file, name)
             shutil.rmtree(output_dir, ignore_errors=True)
             os.makedirs(output_dir, exist_ok=True)
-            overlay += f"  {name} = final.callPackage ./{name} {{ }};\n"
+            overlay += f"  (import ./{name}/overlay.nix)\n"
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 print(f"Cloning repo {details["url"]}")
