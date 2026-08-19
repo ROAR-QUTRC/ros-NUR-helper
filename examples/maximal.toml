@@ -1,5 +1,6 @@
 # Relative to repo root
 output_dir = "nix/generated"
+overlay_prefix = "arg1: "
 
 # Name of repo folder
 [ndt-omp-ros2]
