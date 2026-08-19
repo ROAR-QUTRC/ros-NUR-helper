@@ -10,7 +10,9 @@ from getopt import getopt
 from time import sleep
 from glob import glob
 
-rosargs = "--output-as-nix-pkg-name --no-default --fetch --no-cache"
+rosargs = "--output-as-nix-pkg-name --fetch --no-cache --package-only"
+
+overlay_template = ["final: prev: {\n", "}\n"]
 
 
 def parse_toml(filepath: str):
@@ -35,7 +37,7 @@ def parse_args(args: list[str]) -> dict[str, str | list[str]]:
             parsed_args["rosdistro"] = arg
         else:
             # Shouldn't get to here
-            raise ValueError("Unknown argument {}".format(arg))
+            raise ValueError("Unknown argument {arg}")
     return parsed_args
 
 
@@ -50,12 +52,18 @@ if __name__ == "__main__":
         else:
             output_dir_for_file = parsed_args["output_dir"]
 
+        overlay = ""
+        if "overlay_prefix" in repos:
+            overlay += repos["overlay_prefix"]
+        overlay += overlay_template[0]
+
         for name, details in repos.items():
-            if name == "output_dir":
+            if name == "output_dir" or name == "overlay_prefix":
                 continue
             output_dir = os.path.join(output_dir_for_file, name)
             shutil.rmtree(output_dir, ignore_errors=True)
             os.makedirs(output_dir, exist_ok=True)
+            overlay += f"  {name} = final.callPackage ./{name} {{ }};\n"
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 print(f"Cloning repo {details["url"]}")
@@ -78,3 +86,10 @@ if __name__ == "__main__":
                 program = f"ros2nix {rosargs} --distro {parsed_args["rosdistro"]} --output-dir={output_dir} {" ".join(packages)}"
                 print(program)
                 os.system(program)
+
+        overlay += overlay_template[1]
+        print(overlay)
+        with open(
+            os.path.join(output_dir_for_file, "overlay.nix"), "w", encoding="utf-8"
+        ) as overlay_file:
+            overlay_file.write(overlay)
