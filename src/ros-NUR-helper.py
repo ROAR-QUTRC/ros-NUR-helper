@@ -3,11 +3,11 @@
 import tomllib
 import sys
 import os
+import subprocess
 import shutil
 import git
 import tempfile
 from getopt import getopt
-from time import sleep
 from glob import glob
 
 rosargs = "--output-as-nix-pkg-name --fetch --no-cache --package-only --overlay"
@@ -60,24 +60,38 @@ if __name__ == "__main__":
         for name, details in repos.items():
             if name == "output_dir" or name == "overlay_prefix":
                 continue
-            output_dir = os.path.join(output_dir_for_file, name)
+            output_dir = os.path.join(str(output_dir_for_file), name)
             shutil.rmtree(output_dir, ignore_errors=True)
             os.makedirs(output_dir, exist_ok=True)
             overlay += f"  (import ./{name}/overlay.nix)\n"
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 print(f"Cloning repo {details["url"]}")
-                repo = git.Repo.clone_from(details["url"], temp_dir)
+                branch = ""
                 if "branch" in details:
-                    repo.git.checkout(details["branch"])
+                    branch = details["branch"]
                 else:
                     tag_latest = (
-                        repo.git.ls_remote("--tags", sort="v:refname")
-                        .split("\n")[0]
+                        git.Git()
+                        .ls_remote(details["url"], "refs/tags/*")
+                        .split("\n")[-1]
                         .split("\t")[-1]
                         .split("/")[-1]
+                        .split("^")[0]
                     )
-                    repo.git.checkout(tag_latest)
+                    print(tag_latest)
+                    branch = tag_latest
+                repo = git.Repo.clone_from(
+                    details["url"],
+                    temp_dir,
+                    multi_options=["--shallow-submodules"],
+                    depth=1,
+                    branch=branch,
+                )
+
+                # This is needed because of the shallow clone
+                # Still saves *some* time on cloning compared to a deep clone
+                repo.remote().fetch(refspec="refs/heads/*:refs/remotes/origin/*")
                 print("Cloned")
 
                 if "paths" not in details:
@@ -95,11 +109,11 @@ if __name__ == "__main__":
                 #       It's a python program, but the api is not exposed
                 program = f"ros2nix {rosargs} --distro {parsed_args["rosdistro"]} --output-dir={output_dir} {" ".join(packages)}"
                 print(program)
-                os.system(program)
+                subprocess.run(program.split())
 
         overlay += overlay_template[1]
         print(overlay)
         with open(
-            os.path.join(output_dir_for_file, "overlay.nix"), "w", encoding="utf-8"
+            os.path.join(str(output_dir_for_file), "overlay.nix"), "w", encoding="utf-8"
         ) as overlay_file:
             overlay_file.write(overlay)
